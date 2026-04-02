@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>For Sayali 💖</title>
+
+<style>
+body {
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(135deg,#ffd1dc,#ffb6c1);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* 🎂 FRONT PAGE */
+#frontPage{
+position:absolute;
+width:100%;
+height:100%;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+z-index:10;
+cursor:pointer;
+}
+
+/* 🎂 Cake Glow */
+.cakeGlow{
+  font-size:100px;
+  position:relative;
+  animation: glow 2s infinite alternate;
+}
+
+@keyframes glow{
+  0%{transform:scale(1);filter:drop-shadow(0 0 5px #fff);}
+  100%{transform:scale(1.05);filter:drop-shadow(0 0 20px #fff) drop-shadow(0 0 30px #ff80ab);}
+}
+
+/* ✨ Sparkles */
+.sparkles::before,
+.sparkles::after{
+  content:"✨";
+  position:absolute;
+  font-size:20px;
+  animation:sparkleMove 2s infinite;
+}
+
+.sparkles::before{left:-20px;top:20px;}
+.sparkles::after{right:-20px;top:-10px;}
+
+@keyframes sparkleMove{
+  0%{opacity:0;transform:translateY(0) scale(0.5);}
+  50%{opacity:1;transform:translateY(-10px) scale(1);}
+  100%{opacity:0;transform:translateY(-20px) scale(0.5);}
+}
+
+/* 🎈 Balloons */
+.balloon-container{
+  position:absolute;
+  bottom:-100px;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+
+.balloon{
+  position:absolute;
+  width:30px;
+  height:40px;
+  border-radius:50%;
+  animation: floatUp 8s linear infinite;
+}
+
+.balloon:nth-child(1){background:#ff4081; left:10%; animation-duration:7s;}
+.balloon:nth-child(2){background:#ff80ab; left:25%; animation-duration:9s;}
+.balloon:nth-child(3){background:#ffd1dc; left:40%; animation-duration:8s;}
+.balloon:nth-child(4){background:#f50057; left:60%; animation-duration:6s;}
+.balloon:nth-child(5){background:#ff1744; left:75%; animation-duration:10s;}
+.balloon:nth-child(6){background:#ffffff; left:90%; animation-duration:7.5s;}
+
+@keyframes floatUp{
+  0%{transform:translateY(0);opacity:0;}
+  20%{opacity:1;}
+  100%{transform:translateY(-120vh);opacity:0;}
+}
+
+/* 💖 Text */
+.title{color:navy;font-size:34px;margin-top:20px;}
+.subtitle{color:white;opacity:0.8;}
+
+/* 💌 Story */
+.card{
+background:white;
+width:350px;
+padding:30px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
+display:none;
+z-index:2;
+}
+
+#message{
+font-size:20px;
+color:#444;
+line-height:1.6;
+min-height:150px;
+}
+
+button{
+margin-top:20px;
+padding:10px 20px;
+background:#ff4081;
+color:white;
+border:none;
+border-radius:10px;
+cursor:pointer;
+}
+
+/* Canvas */
+canvas{
+position:absolute;
+top:0;
+left:0;
+pointer-events:none;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="glitter"></canvas>
+<canvas id="fireworks"></canvas>
+<canvas id="confetti"></canvas>
+
+<!-- 🎂 FRONT PAGE -->
+<div id="frontPage" onclick="startStory()">
+
+  <div class="cakeGlow">
+    🎂
+    <div class="sparkles"></div>
+  </div>
+
+  <div class="balloon-container">
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+  </div>
+
+  <div class="title">Happy Birthday Maggiipglu 💖</div>
+  <div class="subtitle">Tap to start 💫</div>
+
+</div>
+
+<!-- 💌 STORY -->
+<div class="card" id="story">
+  <div id="message"></div>
+  <button id="nextBtn" onclick="next()">Next 💖</button>
+</div>
+
+<script>
+
+// 💬 FINAL SLIDES (YOUR MESSAGE ADDED)
+const slides = [
+`Happy Birthday Sayali 💖
+
+Out of all the people in my life,
+you are the one who truly matters the most...`,
+
+`You are not just my best friend…
+
+You are my comfort,
+my peace,
+and the only person who understands me without words 🤍`,
+
+`No matter what happens in life,
+I promise I’ll always be there for you…
+
+Because honestly,
+you are the only friend I ever need 💖✨`,
+
+`Sayali…
+
+Mahit nahi mala mi kay lihu...
+
+Je sagla mi pahile lihla,
+te sagla ChatGPT cha aahe 🫠
+
+Mi evdach bolen ki —
+majhya sathi tu khup important aahes
+majhya life mhdhe…
+
+Karan tuzya sarkhi majhya life mhdhe
+kadhi hi female friend navti…
+
+Aani mala hi apeksha rahil ki
+tu kayam rahshil 🥹`,
+
+`Baki mala kay bolu te pan kalat nahi…
+
+Pan parat ekda —
+Happiest Birthday to you 🎂💖
+
+Life mhdhe khup pudhe ja ✨  
+aani je kahi svpn aahet te purn kar…  
+aani strong raha 💪
+
+Karan ajun khup life baghaychi aahe pudhe…
+
+Fakta ek —
+sagla kartana visru nakos mala 😌
+
+Enjoy your day 🫶🥳🎉`
+];
+
+let i=0;
+let typingInterval;
+
+// ✍️ Typing
+function typeText(text){
+let msg=document.getElementById("message");
+clearInterval(typingInterval);
+
+msg.innerHTML="";
+let j=0;
+
+typingInterval=setInterval(()=>{
+if(j<text.length){
+msg.innerHTML+=text[j]==="\n"?"<br>":text[j];
+j++;
+}else clearInterval(typingInterval);
+},40);
+}
+
+// 🎉 Start
+function startStory(){
+createConfettiBurst();
+
+setTimeout(()=>{
+document.getElementById("frontPage").style.display="none";
+document.getElementById("story").style.display="block";
+typeText(slides[0]);
+},800);
+}
+
+// 👉 Next
+function next(){
+i++;
+if(i>=slides.length)i=slides.length-1;
+
+typeText(slides[i]);
+
+if(i===slides.length-1){
+triggerFireworks();
+document.getElementById("nextBtn").style.display="none";
+}
+}
+
+//// ✨ SPARKLES
+const gCanvas=document.getElementById("glitter");
+const gCtx=gCanvas.getContext("2d");
+
+gCanvas.width=window.innerWidth;
+gCanvas.height=window.innerHeight;
+
+let sparkles=[];
+for(let i=0;i<150;i++){
+sparkles.push({
+x:Math.random()*gCanvas.width,
+y:Math.random()*gCanvas.height,
+size:Math.random()*2,
+speed:Math.random()+0.3
+});
+}
+
+function animateSparkles(){
+gCtx.clearRect(0,0,gCanvas.width,gCanvas.height);
+
+sparkles.forEach(p=>{
+p.y-=p.speed;
+if(p.y<0){
+p.y=gCanvas.height;
+p.x=Math.random()*gCanvas.width;
+}
+
+gCtx.globalAlpha=Math.random();
+gCtx.fillStyle="#ffffff";
+gCtx.beginPath();
+gCtx.arc(p.x,p.y,p.size,0,Math.PI*2);
+gCtx.fill();
+});
+
+requestAnimationFrame(animateSparkles);
+}
+animateSparkles();
+
+//// 🎇 FIREWORKS
+const fwCanvas=document.getElementById("fireworks");
+const fwCtx=fwCanvas.getContext("2d");
+
+fwCanvas.width=window.innerWidth;
+fwCanvas.height=window.innerHeight;
+
+let particles=[];
+
+function triggerFireworks(){
+setInterval(()=>{
+let x=Math.random()*fwCanvas.width;
+let y=Math.random()*fwCanvas.height/2;
+for(let i=0;i<40;i++){
+particles.push({
+x,y,
+angle:Math.random()*Math.PI*2,
+speed:Math.random()*3+1,
+alpha:1,
+color:["#ff4081","#ffd1dc","#ffffff"][Math.floor(Math.random()*3)]
+});
+}
+},800);
+}
+
+function animateFireworks(){
+fwCtx.clearRect(0,0,fwCanvas.width,fwCanvas.height);
+
+particles.forEach((p,index)=>{
+p.x+=Math.cos(p.angle)*p.speed;
+p.y+=Math.sin(p.angle)*p.speed;
+p.alpha-=0.02;
+
+fwCtx.globalAlpha=p.alpha;
+fwCtx.fillStyle=p.color;
+fwCtx.beginPath();
+fwCtx.arc(p.x,p.y,2,0,Math.PI*2);
+fwCtx.fill();
+
+if(p.alpha<=0)particles.splice(index,1);
+});
+
+requestAnimationFrame(animateFireworks);
+}
+animateFireworks();
+
+//// 🎉 CONFETTI
+const cCanvas=document.getElementById("confetti");
+const cCtx=cCanvas.getContext("2d");
+
+cCanvas.width=window.innerWidth;
+cCanvas.height=window.innerHeight;
+
+let confetti=[];
+
+function createConfettiBurst(){
+for(let i=0;i<150;i++){
+confetti.push({
+x:window.innerWidth/2,
+y:window.innerHeight/2,
+size:Math.random()*8+2,
+speedX:(Math.random()-0.5)*10,
+speedY:(Math.random()-0.5)*10,
+gravity:0.2,
+color:["#ff4081","#ffd1dc","#ffffff","#ff80ab","#f50057"][Math.floor(Math.random()*5)],
+rotation:Math.random()*360
+});
+}
+}
+
+function animateConfetti(){
+cCtx.clearRect(0,0,cCanvas.width,cCanvas.height);
+
+confetti.forEach((p,index)=>{
+p.x+=p.speedX;
+p.y+=p.speedY;
+p.speedY+=p.gravity;
+p.rotation+=5;
+
+cCtx.save();
+cCtx.translate(p.x,p.y);
+cCtx.rotate(p.rotation*Math.PI/180);
+cCtx.fillStyle=p.color;
+cCtx.fillRect(-p.size/2,-p.size/2,p.size,p.size);
+cCtx.restore();
+
+if(p.y>cCanvas.height)confetti.splice(index,1);
+});
+
+requestAnimationFrame(animateConfetti);
+}
+animateConfetti();
+
+</script>
+
+</body>
+</html>
